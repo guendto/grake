@@ -1,0 +1,46 @@
+
+
+    In brief
+
+grake is a command line tool for scanning webpages for Youtube links.
+
+Make sure you read the manual page for grake (see Installation below).
+
+Project:
+    <http://grake.googlecode.com/>
+
+Development repository:
+    <git://repo.or.cz/grake.git>
+
+
+    Installation
+
+This is an optional step, you could just as well copy the bin/grake
+file to your path and start using it. The installation takes care
+of generating the grake(1) manual from bin/grake but you can also
+use "perldoc bin/grake" if you want to skip the installation
+altogether.
+
+Prerequisites:
+
+  * See Makefile.PL for these
+
+If you choose to install:
+
+  * Make sure you REMOVE any earlier version of grake before you continue
+
+  * INSTALL_BASE can be passed into Makefile.PL to change where grake will
+  be installed, e.g.:
+
+    perl Makefile.PL INSTALL_BASE=/usr/local
+
+  * Typical steps:
+
+    perl Makefile.PL
+    make
+    make install
+
+    Refer to the ExtUtils::MakeMaker documentation when in doubt:
+        <http://search.cpan.org/perldoc?ExtUtils::MakeMaker>
+
+

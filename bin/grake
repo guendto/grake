@@ -1,0 +1,390 @@
+#!/usr/bin/perl
+# -*- coding: ascii -*-
+
+#
+# Copyright (C) 2010 Toni Gundogdu <legatvs@gmail.com>.
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+#
+
+use warnings;
+use strict;
+
+binmode STDOUT, ":utf8";
+binmode STDERR, ":utf8";
+
+use Getopt::ArgvFile( home => 1, startupFilename => [qw(.grakerc)] );
+use Getopt::Long qw(:config bundling);
+
+my $VERSION = "0.0.1";
+my %config;
+
+exit main();
+
+sub init {
+    GetOptions(
+        \%config,
+        'interactive|i',
+        'title|t',
+        'csv',
+        'version'   => \&print_version,
+        'license'   => \&print_license,
+        'help'      => \&print_help,
+    ) or exit 1;
+
+    $config{title} ||= $config{csv};
+}
+
+sub print_version {
+    print "grake version $VERSION\n";
+    exit 0;
+}
+
+sub print_license {
+    print
+        "Copyright (C) 2010 Toni Gundogdu. GNU GPL v3+. This is free software;
+see the source for copying conditions. There is NO warranty; not even
+for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+";
+    exit 0;
+}
+
+sub print_help {
+    require Pod::Usage;
+    Pod::Usage::pod2usage( -exitstatus => 0, -verbose => 1 );
+}
+
+my @ids;
+my @links;
+
+sub main {
+
+    init();
+
+    print_help() unless scalar @ARGV;
+
+    print STDERR "Checking ...";
+
+    require LWP;
+    require URI::Escape;
+
+    my $a = new LWP::UserAgent;
+
+    $a->env_proxy;
+
+    my $q = qr{v[=/]([-_\w]{11,11}+)};
+
+    foreach (@ARGV) {
+
+        my $r = $a->get ($_);
+
+        unless ($r->is_success) {
+            printf STDERR "\nerror: $_: %s\n", $r->status_line;
+            next;
+        }
+
+        my $d = URI::Escape::uri_unescape ($r->content);
+        @ids = uniq ( (@ids, $d =~ /$q/g) );
+
+        print STDERR ".";
+    }
+
+    unless (scalar @ids) {
+        print STDERR "error: nothing found.\n";
+        return 0;
+    }
+    else {
+        print STDERR "done.\n";
+    }
+
+    print STDERR "Getting ...";
+
+    foreach my $id (@ids) {
+
+        my %tmp = (
+            id    => $id,
+            url   => "http://youtube.com/v=$id",
+            gvi   => "http://www.youtube.com/get_video_info?&video_id=$id"
+                    . "&el=detailpage&ps=default&eurl=&gl=US&hl=en",
+            title => undef,
+            selected => 1
+        );
+
+        $tmp{title} = get_title ($a, $tmp{gvi}) if $config{title};
+
+        push @links, \%tmp;
+    }
+
+    print STDERR "done.\n";
+
+    prompt() if $config{interactive};
+
+    foreach (@links) {
+        $config{csv}
+            ? print qq/"$_->{title}","$_->{url}"\n/
+            : print "$_->{url}\n" if $_->{selected};
+    }
+
+    return 0;
+}
+
+sub get_title {
+
+    my ($a, $url) = @_;
+
+    my $r = $a->get ($url);
+
+    unless ($r->is_success) {
+        printf STDERR "\nerror: $url: %s\n", $r->status_line;
+        return;
+    }
+
+    my $title;
+
+    require CGI;
+
+    my $q = CGI->new ($r->content);
+
+    if ($q->param ('reason')) {
+        printf STDERR "\nerror: %s: %s (errorcode: %d)\n",
+            $url, $q->param ("reason"), $q->param ("errorcode");
+    }
+    else {
+        require Encode;
+        $title = Encode::decode_utf8 ($q->param ('title'));
+    }
+
+    unless ($title) {
+        print STDERR "\nwarning: $url: use id instead\n";
+    }
+    else {
+        print STDERR ".";
+    }
+
+    return $title;
+}
+
+sub uniq { return keys %{{ map { $_ => 1 } @_ }};  } # Original order lost.
+
+my $done = 0;
+
+sub prompt {
+
+    my %cmds = (
+        'h' => \&help,
+        'q' => \&quit,
+        'l' => \&list,
+        'a' => \&select_all,
+        'n' => \&select_none,
+        'i' => \&invert_selection,
+        'd' => \&dump,
+    );
+
+    print STDERR "Enter prompt. " . qq/Type "help" to get a list of commands.\n/;
+    list();
+
+    my $p = "(grake) ";
+
+    while (!$done) {
+        print STDERR $p;
+        my $ln = <STDIN>;
+        next unless $ln;
+        chomp $ln;
+        if ($ln =~ /(\d+)/) {
+            toggle_caption ($1);
+        }
+        else {
+            next unless $ln =~ /(\w)/;
+            $cmds{$1}() if defined $cmds{$1};
+        }
+    }
+}
+
+sub help {
+    print STDERR "Commands:
+  help      .. this
+  list      .. display found links (> indicates selected for download)
+  all       .. select all
+  none      .. select none
+  invert    .. invert selection
+  (number)  .. toggle caption
+  dump      .. dump selected links and exit
+  quit      .. quit without dumping links\n"
+  . qq/Command name abbreviations are allowed, e.g. "h" instead of "help"\n/;
+}
+
+sub quit { exit 0; }
+
+sub list {
+    my $i = 0;
+    foreach (@links) {
+        printf STDERR "%2s%02d: %s\n",
+            $_->{selected} ? ">":"",
+            ++$i,
+            $_->{title} || $_->{url};
+    }
+}
+
+sub select_all {
+    $_->{selected} = 1 foreach @links;
+    list();
+}
+
+sub select_none {
+    $_->{selected} = 0 foreach @links;
+    list();
+}
+
+sub invert_selection {
+    $_->{selected} = !$_->{selected} foreach @links;
+    list();
+}
+
+sub dump {
+    $done = 1;
+}
+
+sub toggle_caption {
+    my $i = (shift) - 1;
+    if ($i >= 0 && exists $links[$i]) {
+        $links[$i]->{selected} = !$links[$i]->{selected};
+        list();
+    }
+    else {
+        print STDERR "error: out of rate\n";
+    }
+}
+
+__END__
+
+=head1 NAME
+
+grake - Youtube video link scanner
+
+=head1 SYNOPSIS
+
+grake [options] [URL ...]
+
+=head1 DESCRIPTION
+
+grake is a command line tool for scanning webpages for Youtube video links.
+Each found link is separated with a newline and dumped to the standard output.
+
+You can use grake together with such tools like C<cclive(1)>. If you
+need to select the videos, use the C<--interactive> switch.
+
+=head1 OPTIONS
+
+ --help             print help and exit
+ --version          print version and exit
+ --license          print license and exit
+ -i, --interactive  run in interactive mode
+ -t, --title        get title for video link
+ --csv              print details in csv, implies -t
+
+=head1 OPTION DESCRIPTIONS
+
+=over 4
+
+=item B<--help>
+
+Print help and exit.
+
+=item B<--version>
+
+Print version and exit.
+
+=item B<--license>
+
+Print license and exit.
+
+=item B<-i, --interactive>
+
+Enable interactive prompt which can be used to select the found
+video links to be dumped to stdout. By default grake dumps all
+found links without prompting.
+
+=item B<-t, --title>
+
+Get a video title for each found link. The default is no.
+
+=item B<--csv>
+
+Print details in CSV ("$title","$url"\n). Implies C<--title>.
+
+=back
+
+=head1 EXAMPLES
+
+=over 4
+
+=item B<grake "http://youtube.com">
+
+Typical use.
+
+=item B<grake "http://youtube.com" | cclive>
+
+Same but use C<cclive(1)> to download the found videos.
+
+=back
+
+=head1 EXIT STATUS
+
+Exits 0 on success, otherwise E<gt>0;
+
+=head1 FILES
+
+=over 4
+
+=item $HOME/.grakerc, for example:
+
+echo "--title" >> ~/.grakerc
+
+=back
+
+=head1 NOTES
+
+=over 4
+
+=item B<http_proxy>
+
+grake depends on LWP::UserAgent which reads the http_proxy environment
+setting.
+  env http_proxy=http://foo:1234 grake URL
+
+=item B<Project>
+
+<http://grake.googlecode.com/>
+
+=item B<Development repository>
+
+<git://repo.or.cz/grake.git>
+
+e.g. git clone git://repo.or.cz/grake.git
+
+=back
+
+=head1 SEE ALSO
+
+C<cclive(1)>
+
+=head1 AUTHOR
+
+Toni Gundogdu <legatvs gmail com>
+
+=cut
+
+
+
+
