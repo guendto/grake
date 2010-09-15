@@ -289,8 +289,8 @@ need to select the videos, use the C<--interactive> switch.
  --help             print help and exit
  --version          print version and exit
  --license          print license and exit
- -i, --interactive  run in interactive mode
- -t, --title        get title for video link
+ -i, --interactive  run in interactive mode (default:no)
+ -t, --title        get title for video link (default:no)
  --csv              print details in csv, implies -t
 
 =head1 OPTION DESCRIPTIONS
