@@ -274,7 +274,7 @@ grake - Youtube video link scanner
 
 =head1 SYNOPSIS
 
-grake [options] [URL ...]
+grake [--help | --version | --license] [-i] [-t] [--csv] [<url>...]
 
 =head1 DESCRIPTION
 
