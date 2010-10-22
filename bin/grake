@@ -114,7 +114,7 @@ sub main {
 
         my %tmp = (
             id    => $id,
-            url   => "http://youtube.com/v=$id",
+            url   => "http://youtube.com/watch?v=$id",
             gvi   => "http://www.youtube.com/get_video_info?&video_id=$id"
                     . "&el=detailpage&ps=default&eurl=&gl=US&hl=en",
             title => undef,
