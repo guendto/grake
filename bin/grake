@@ -27,7 +27,7 @@ binmode STDERR, ":utf8";
 use Getopt::ArgvFile( home => 1, startupFilename => [qw(.grakerc)] );
 use Getopt::Long qw(:config bundling);
 
-my $VERSION = "0.0.2";
+my $VERSION = "0.0.3";
 my %config;
 
 exit main();
