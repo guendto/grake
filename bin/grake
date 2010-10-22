@@ -21,13 +21,14 @@
 use warnings;
 use strict;
 
+use version; our $VERSION = qv(0.03);
+
 binmode STDOUT, ":utf8";
 binmode STDERR, ":utf8";
 
 use Getopt::ArgvFile( home => 1, startupFilename => [qw(.grakerc)] );
 use Getopt::Long qw(:config bundling);
 
-my $VERSION = "0.0.3";
 my %config;
 
 exit main();
@@ -47,7 +48,7 @@ sub init {
 }
 
 sub print_version {
-    print "grake version $VERSION\n";
+    print "grake $VERSION\n";
     exit 0;
 }
 
