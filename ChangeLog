@@ -1,5 +1,8 @@
+Revision history for grake.
 
-0.0.3
+0.03
+       - Add VERSION_FROM to Makefile.PL
+       - Add 'version' to PREREQ_PM in Makefile.PL
        - Fix "not returning correct expected output" (#2)
 
 
