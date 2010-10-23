@@ -15,9 +15,11 @@ WriteMakefile(
     'VERSION_FROM' => 'bin/grake',
     'EXE_FILES' => ['bin/grake'],
     'PREREQ_PM' => {
-        'Getopt::ArgvFile' => 1.11,  # tested, earlier may work
-        'LWP::UserAgent'   => 5.835, # tested, earlier may work
-        'version'          => 0.82,  # tested, earlier may work
+# Earlier versions may work -- confirmed to work with:
+'Getopt::ArgvFile' => 1.11,  # <http://search.cpan.org/perldoc?Getopt::ArgvFile>
+'LWP::UserAgent'   => 5.835, # <http://search.cpan.org/perldoc?LWP::UserAgent>
+'version'          => 0.82,  # <http://search.cpan.org/perldoc?version>
+'Test::Pod'        => 1.44,  # <http://search.cpan.org/perldoc?Test::Pod>
     },
     'LICENSE' => 'gpl',
 );
