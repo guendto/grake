@@ -3,3 +3,4 @@ ChangeLog
 Makefile.PL
 MANIFEST			This list of files
 README
+t/grake-Pod.t
