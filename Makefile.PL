@@ -20,8 +20,4 @@ WriteMakefile(
         'version'          => 0.82,  # tested, earlier may work
     },
     'LICENSE' => 'gpl',
-    dist => {
-        COMPRESS => 'bzip2',
-        SUFFIX => '.bz2'
-    },
 );
