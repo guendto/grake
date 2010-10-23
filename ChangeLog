@@ -1,9 +1,12 @@
 Revision history for grake.
 
-0.03
-       - Add VERSION_FROM to Makefile.PL
-       - Add 'version' to PREREQ_PM in Makefile.PL
-       - Fix "not returning correct expected output" (#2)
+0.03  Sat Oct 23 2010  legatvs
+Changes:
+        - Add t/grake-Pod.t
+        - Add VERSION_FROM to Makefile.PL
+        - Add 'version', 'Test::Pod' to Makefile.PL
+Bugfixes:
+        - Fix "not returning correct expected output" (#2)
 
 
 Version 0.0.2
