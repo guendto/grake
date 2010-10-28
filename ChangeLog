@@ -1,5 +1,10 @@
 Revision history for grake.
 
+0.0.4
+Changes:
+        - Use version->declare instead of version::qv
+
+
 0.03  Sat Oct 23 2010  legatvs
 Changes:
         - Add t/grake-Pod.t
