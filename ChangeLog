@@ -2,9 +2,11 @@ Revision history for grake.
 
 0.0.4
 Changes:
+        - Add --json
         - Use version->declare instead of version::qv
 Bugfixes:
-        - Fix "Nested quantifiers in regex" error with Perl 5.8 (#3)
+        - Uninitialized title error if title fetch failed earlier (--csv)
+        - "Nested quantifiers in regex" error with Perl 5.8 (#3)
 
 
 0.03  Sat Oct 23 2010  legatvs
