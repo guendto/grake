@@ -84,7 +84,7 @@ sub main {
 
     $a->env_proxy;
 
-    my $q = qr{v[=/]([-_\w]{11,11}+)};
+    my $q = qr{v[=/]((?>[-_\w]{11}))};
 
     foreach (@ARGV) {
 
