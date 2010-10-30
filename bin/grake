@@ -21,7 +21,7 @@
 use warnings;
 use strict;
 
-use version 0.77 (); our $VERSION = version->declare("0.0.4");
+use version 0.77 (); our $VERSION = version->declare ("0.0.4");
 
 binmode STDOUT, ":utf8";
 binmode STDERR, ":utf8";
@@ -38,12 +38,14 @@ sub init {
         \%config,
         'interactive|i',
         'title|t',
+        'json',
         'csv',
         'version'   => \&print_version,
         'license'   => \&print_license,
         'help'      => \&print_help,
     ) or exit 1;
 
+    $config{title} ||= $config{json};
     $config{title} ||= $config{csv};
 }
 
@@ -105,9 +107,8 @@ sub main {
         print STDERR "error: nothing found.\n";
         return 0;
     }
-    else {
-        print STDERR "done.\n";
-    }
+    else
+        { print STDERR "done.\n"; }
 
     print STDERR "Getting ...";
 
@@ -131,11 +132,43 @@ sub main {
 
     prompt() if $config{interactive};
 
+    if ($config{json})
+        { print qq/{\n  "video": [\n/; }
+
+    my $i = 0;
+
     foreach (@links) {
-        $config{csv}
-            ? print qq/"$_->{title}","$_->{url}"\n/
-            : print "$_->{url}\n" if $_->{selected};
+
+        if ($_->{selected} or not $config{interactive}) {
+
+            ++$i;
+
+            my $t =  $_->{title} || "";
+               $t =~ s/"/\\"/g;
+
+            if ($config{json}) {
+
+                print ",\n"  if $i > 1;
+
+                print
+                        "    {\n"
+                    . qq/      "title": "$t",\n/
+                    . qq/      "url": "$_->{url}"\n/
+                    .   "    }",
+            }
+
+            elsif ($config{csv})
+                { print qq/"$t","$_->{url}"\n/; }
+
+            else
+                { print "$_->{url}\n"; }
+
+        }
+
     }
+
+    if ($config{json})
+        { print "\n  ]\n}\n"; }
 
     return 0;
 }
@@ -166,12 +199,10 @@ sub get_title {
         $title = Encode::decode_utf8 ($q->param ('title'));
     }
 
-    unless ($title) {
-        print STDERR "\nwarning: $url: use id instead\n";
-    }
-    else {
-        print STDERR ".";
-    }
+    unless ($title)
+        { print STDERR "\nwarning: $url: use id instead\n"; }
+    else
+        { print STDERR "."; }
 
     return $title;
 }
@@ -192,24 +223,30 @@ sub prompt {
         'd' => \&dump,
     );
 
-    print STDERR "Enter prompt. " . qq/Type "help" to get a list of commands.\n/;
+    print STDERR "Enter prompt. Type \"help\" to get a list of commands.\n";
     list();
 
     my $p = "(grake) ";
 
-    while (!$done) {
+    while (not $done) {
+
         print STDERR $p;
+
         my $ln = <STDIN>;
+
         next unless $ln;
         chomp $ln;
-        if ($ln =~ /(\d+)/) {
-            toggle_caption ($1);
-        }
+
+        if ($ln =~ /(\d+)/)
+            { toggle_caption ($1); }
+
         else {
             next unless $ln =~ /(\w)/;
-            $cmds{$1}() if defined $cmds{$1};
+            $cmds{$1}()  if defined $cmds{$1};
         }
+
     }
+
 }
 
 sub help {
@@ -231,7 +268,9 @@ sub list {
     my $i = 0;
     foreach (@links) {
         printf STDERR "%2s%02d: %s\n",
-            $_->{selected} ? ">":"",
+            $_->{selected}
+                ? ">"
+                : "",
             ++$i,
             $_->{title} || $_->{url};
     }
@@ -248,23 +287,20 @@ sub select_none {
 }
 
 sub invert_selection {
-    $_->{selected} = !$_->{selected} foreach @links;
+    $_->{selected} = not $_->{selected}  foreach @links;
     list();
 }
 
-sub dump {
-    $done = 1;
-}
+sub dump { $done = 1; }
 
 sub toggle_caption {
     my $i = (shift) - 1;
     if ($i >= 0 && exists $links[$i]) {
-        $links[$i]->{selected} = !$links[$i]->{selected};
+        $links[$i]->{selected} = not $links[$i]->{selected};
         list();
     }
-    else {
-        print STDERR "error: out of rate\n";
-    }
+    else
+        { print STDERR "error: out of range\n"; }
 }
 
 __END__
@@ -275,7 +311,7 @@ grake - Youtube video link scanner
 
 =head1 SYNOPSIS
 
-grake [-i] [-t] [--csv] [<url>...]
+grake [-i] [-t] [--csv | --json] [<url>...]
 
 =head1 DESCRIPTION
 
@@ -287,12 +323,13 @@ need to select the videos, use the C<--interactive> switch.
 
 =head1 OPTIONS
 
- --help             print help and exit
- --version          print version and exit
- --license          print license and exit
- -i, --interactive  run in interactive mode (default:no)
- -t, --title        get title for video link (default:no)
- --csv              print details in csv, implies -t
+     --help         print help and exit
+     --version      print version and exit
+     --license      print license and exit
+ -i, --interactive  run in interactive mode
+ -t, --title        get title for video link
+     --json         print details in json, implies -t
+     --csv          print details in csv, implies -t
 
 =head1 OPTION DESCRIPTIONS
 
@@ -320,6 +357,10 @@ found links without prompting.
 
 Get a video title for each found link. The default is no.
 
+=item B<--json>
+
+Print details in JSON. Negates C<--csv>. Implies C<--title>.
+
 =item B<--csv>
 
 Print details in CSV ("$title","$url"\n). Implies C<--title>.
@@ -334,9 +375,13 @@ Print details in CSV ("$title","$url"\n). Implies C<--title>.
 
 Typical use.
 
+=item B<grake --json "http://youtube.com">
+
+Same but print details in JSON.
+
 =item B<grake "http://youtube.com" | cclive>
 
-Same but use C<cclive(1)> to download the found videos.
+Download the found videos with C<cclive(1)>.
 
 =back
 
@@ -385,7 +430,5 @@ C<cclive(1)>
 Toni Gundogdu <legatvs gmail com>
 
 =cut
-
-
 
 
