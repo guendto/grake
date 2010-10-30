@@ -8,7 +8,7 @@ use ExtUtils::MakeMaker;
 WriteMakefile(
     'NAME' => 'grake',
     ( $[ >= 5.8 )
-    ? ( AUTHOR => 'Toni Gundogdu <legatvs@gmail.com>',
+    ? ( AUTHOR => 'Toni Gundogdu <legatvs at sign gmail com>',
         'ABSTRACT' => 'Scan webpages for Youtube video links',
         )
     : (),
