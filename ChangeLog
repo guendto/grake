@@ -2,6 +2,7 @@ Revision history for grake.
 
 0.0.4
 Changes:
+        - Add missing COPYING
         - Add --json
         - Use version->declare instead of version::qv
 Bugfixes:
