@@ -2,3 +2,5 @@
 ^Makefile$
 ^blib/
 ^\.
+.gz
+TODO
