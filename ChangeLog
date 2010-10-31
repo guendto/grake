@@ -1,6 +1,6 @@
 Revision history for grake.
 
-0.0.4
+0.0.4  Sun Oct 31 2010  legatvs
 Changes:
         - Add missing COPYING
         - Add --json
