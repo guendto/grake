@@ -40,6 +40,8 @@ sub init {
         'title|t',
         'json',
         'csv',
+        'proxy=s',
+        'no_proxy|no-proxy',
         'version'   => \&print_version,
         'license'   => \&print_license,
         'help'      => \&print_help,
@@ -80,11 +82,15 @@ sub main {
     print STDERR "Checking ...";
 
     require LWP;
-    require URI::Escape;
 
     my $a = new LWP::UserAgent;
 
-    $a->env_proxy;
+    $a->env_proxy; # http://search.cpan.org/perldoc?LWP::UserAgent
+
+    $a->proxy    ('http', $config{proxy}) if $config{proxy};
+    $a->no_proxy ('') if $config{no_proxy};
+
+    require URI::Escape;
 
     my $q = qr{v[=/]((?>[-_\w]{11}))};
 
@@ -311,7 +317,8 @@ grake - Youtube video link scanner
 
 =head1 SYNOPSIS
 
-grake [-i] [-t] [--csv | --json] [<url>...]
+grake [-i] [-t] [--csv | --json] [--proxy E<lt>addrE<gt> | --no-proxy]
+    [<url>...]
 
 =head1 DESCRIPTION
 
@@ -323,13 +330,15 @@ need to select the videos, use the C<--interactive> switch.
 
 =head1 OPTIONS
 
-     --help         print help and exit
-     --version      print version and exit
-     --license      print license and exit
- -i, --interactive  run in interactive mode
- -t, --title        get title for video link
-     --json         print details in json, implies -t
-     --csv          print details in csv, implies -t
+     --help                  print help and exit
+     --version               print version and exit
+     --license               print license and exit
+ -i, --interactive           run in interactive mode
+ -t, --title                 get title for video link
+     --json                  print details in json, implies -t
+     --csv                   print details in csv, implies -t
+     --proxy arg (=http_env) use proxy for http connections
+     --no-proxy              disable use of http proxy
 
 =head1 OPTION DESCRIPTIONS
 
@@ -364,6 +373,16 @@ Print details in JSON. Negates C<--csv>. Implies C<--title>.
 =item B<--csv>
 
 Print details in CSV ("$title","$url"\n). Implies C<--title>.
+
+=item B<--proxy> I<arg>
+
+Use I<arg> for HTTP proxy, e.g. "http://foo:1234". Overrides the http_proxy
+environment setting.
+
+=item B<--no-proxy>
+
+Disable use of HTTP proxy. Overrides both C<--proxy> and http_proxy environment
+settings.
 
 =back
 
