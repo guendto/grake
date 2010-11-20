@@ -42,6 +42,7 @@ sub init {
         'csv',
         'proxy=s',
         'no_proxy|no-proxy',
+        'quiet|q',
         'version'   => \&print_version,
         'license'   => \&print_license,
         'help'      => \&print_help,
@@ -79,7 +80,7 @@ sub main {
 
     print_help() unless scalar @ARGV;
 
-    print STDERR "Checking ...";
+    print STDERR "Checking ..."  unless $config{quiet};
 
     require LWP;
 
@@ -106,7 +107,7 @@ sub main {
         my $d = URI::Escape::uri_unescape ($r->content);
         @ids = uniq ( (@ids, $d =~ /$q/g) );
 
-        print STDERR ".";
+        print STDERR "."  unless $config{quiet};
     }
 
     unless (scalar @ids) {
@@ -114,9 +115,9 @@ sub main {
         return 0;
     }
     else
-        { print STDERR "done.\n"; }
+        { print STDERR "done.\n"  unless $config{quiet}; }
 
-    print STDERR "Getting ...";
+    print STDERR "Getting ..."  unless $config{quiet};
 
     foreach my $id (@ids) {
 
@@ -134,7 +135,7 @@ sub main {
         push @links, \%tmp;
     }
 
-    print STDERR "done.\n";
+    print STDERR "done.\n"  unless $config{quiet};
 
     prompt() if $config{interactive};
 
@@ -206,9 +207,9 @@ sub get_title {
     }
 
     unless ($title)
-        { print STDERR "\nwarning: $url: use id instead\n"; }
+        { print STDERR "\nwarning: $url: use id instead\n"  unless $config{quiet}; }
     else
-        { print STDERR "."; }
+        { print STDERR "."  unless $config{quiet}; }
 
     return $title;
 }
@@ -317,7 +318,7 @@ grake - Youtube video link scanner
 
 =head1 SYNOPSIS
 
-grake [-i] [-t] [--csv | --json] [--proxy E<lt>addrE<gt> | --no-proxy]
+grake [-q] [-i] [-t] [--csv | --json] [--proxy E<lt>addrE<gt> | --no-proxy]
     [<url>...]
 
 =head1 DESCRIPTION
@@ -333,6 +334,7 @@ need to select the videos, use the C<--interactive> switch.
      --help                  print help and exit
      --version               print version and exit
      --license               print license and exit
+ -q, --quiet                 be quiet
  -i, --interactive           run in interactive mode
  -t, --title                 get title for video link
      --json                  print details in json, implies -t
@@ -355,6 +357,10 @@ Print version and exit.
 =item B<--license>
 
 Print license and exit.
+
+=item B<-q, --quiet>
+
+Be quiet.
 
 =item B<-i, --interactive>
 
