@@ -1,6 +1,6 @@
 Revision history for grake.
 
-0.0.5
+0.0.5  Tue Nov 30 2010  legatvs
 Changes:
         - Add --quiet
         - Add --proxy, --no-proxy
