@@ -21,7 +21,7 @@
 use warnings;
 use strict;
 
-use version 0.77 (); our $VERSION = version->declare ("0.0.6");
+use version 0.77 (); our $VERSION = version->declare("0.0.6");
 
 binmode STDOUT, ":utf8";
 binmode STDERR, ":utf8";
@@ -43,9 +43,9 @@ sub init {
         'proxy=s',
         'no_proxy|no-proxy',
         'quiet|q',
-        'version'   => \&print_version,
-        'license'   => \&print_license,
-        'help'      => \&print_help,
+        'version' => \&print_version,
+        'license' => \&print_license,
+        'help'    => \&print_help,
     ) or exit 1;
 
     $config{title} ||= $config{json};
@@ -59,7 +59,7 @@ sub print_version {
 
 sub print_license {
     print
-        "Copyright (C) 2010 Toni Gundogdu. GNU GPL v3+. This is free software;
+"Copyright (C) 2010 Toni Gundogdu. GNU GPL v3+. This is free software;
 see the source for copying conditions. There is NO warranty; not even
 for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 ";
@@ -80,16 +80,16 @@ sub main {
 
     print_help() unless scalar @ARGV;
 
-    print STDERR "Checking ..."  unless $config{quiet};
+    print STDERR "Checking ..." unless $config{quiet};
 
     require LWP;
 
     my $a = new LWP::UserAgent;
 
-    $a->env_proxy; # http://search.cpan.org/perldoc?LWP::UserAgent
+    $a->env_proxy;    # http://search.cpan.org/perldoc?LWP::UserAgent
 
-    $a->proxy    ('http', $config{proxy}) if $config{proxy};
-    $a->no_proxy ('') if $config{no_proxy};
+    $a->proxy( 'http', $config{proxy} ) if $config{proxy};
+    $a->no_proxy('') if $config{no_proxy};
 
     require URI::Escape;
 
@@ -97,96 +97,90 @@ sub main {
 
     foreach (@ARGV) {
 
-        my $r = $a->get ($_);
+        my $r = $a->get($_);
 
-        unless ($r->is_success) {
+        unless ( $r->is_success ) {
             printf STDERR "\nerror: $_: %s\n", $r->status_line;
             next;
         }
 
-        my $d = URI::Escape::uri_unescape ($r->content);
-        @ids = uniq ( (@ids, $d =~ /$q/g) );
+        my $d = URI::Escape::uri_unescape( $r->content );
+        @ids = uniq( ( @ids, $d =~ /$q/g ) );
 
-        print STDERR "."  unless $config{quiet};
+        print STDERR "." unless $config{quiet};
     }
 
-    unless (scalar @ids) {
+    unless ( scalar @ids ) {
         print STDERR "error: nothing found.\n";
         return 0;
     }
-    else
-        { print STDERR "done.\n"  unless $config{quiet}; }
+    else { print STDERR "done.\n" unless $config{quiet}; }
 
-    print STDERR "Getting ..."  unless $config{quiet};
+    print STDERR "Getting ..." unless $config{quiet};
 
     foreach my $id (@ids) {
 
         my %tmp = (
-            id    => $id,
-            url   => "http://youtube.com/watch?v=$id",
-            gvi   => "http://www.youtube.com/get_video_info?&video_id=$id"
-                    . "&el=detailpage&ps=default&eurl=&gl=US&hl=en",
-            title => undef,
+            id  => $id,
+            url => "http://youtube.com/watch?v=$id",
+            gvi => "http://www.youtube.com/get_video_info?&video_id=$id"
+              . "&el=detailpage&ps=default&eurl=&gl=US&hl=en",
+            title    => undef,
             selected => 1
         );
 
-        $tmp{title} = get_title ($a, $tmp{gvi}) if $config{title};
+        $tmp{title} = get_title( $a, $tmp{gvi} ) if $config{title};
 
         push @links, \%tmp;
     }
 
-    print STDERR "done.\n"  unless $config{quiet};
+    print STDERR "done.\n" unless $config{quiet};
 
     prompt() if $config{interactive};
 
-    if ($config{json})
-        { print qq/{\n  "video": [\n/; }
+    if ( $config{json} ) { print qq/{\n  "video": [\n/; }
 
     my $i = 0;
 
     foreach (@links) {
 
-        if ($_->{selected} or not $config{interactive}) {
+        if ( $_->{selected} or not $config{interactive} ) {
 
             ++$i;
 
-            my $t =  $_->{title} || "";
-               $t =~ s/"/\\"/g;
+            my $t = $_->{title} || "";
+            $t =~ s/"/\\"/g;
 
-            if ($config{json}) {
+            if ( $config{json} ) {
 
-                print ",\n"  if $i > 1;
+                print ",\n" if $i > 1;
 
-                print
-                        "    {\n"
-                    . qq/      "title": "$t",\n/
-                    . qq/      "url": "$_->{url}"\n/
-                    .   "    }",
+                print "    {\n"
+                  . qq/      "title": "$t",\n/
+                  . qq/      "url": "$_->{url}"\n/ . "    }",
+                  ;
             }
 
-            elsif ($config{csv})
-                { print qq/"$t","$_->{url}"\n/; }
+            elsif ( $config{csv} ) { print qq/"$t","$_->{url}"\n/; }
 
-            else
-                { print "$_->{url}\n"; }
+            else { print "$_->{url}\n"; }
 
         }
 
     }
 
-    if ($config{json})
-        { print "\n  ]\n}\n"; }
+    if ( $config{json} ) { print "\n  ]\n}\n"; }
 
     return 0;
 }
 
 sub get_title {
 
-    my ($a, $url) = @_;
+    my ( $a, $url ) = @_;
 
-    my $r = $a->get ($url);
+    my $r = $a->get($url);
 
-    unless ($r->is_success) {
+    unless ( $r->is_success ) {
         printf STDERR "\nerror: $url: %s\n", $r->status_line;
         return;
     }
@@ -195,26 +189,29 @@ sub get_title {
 
     require CGI;
 
-    my $q = CGI->new ($r->content);
+    my $q = CGI->new( $r->content );
 
-    if ($q->param ('reason')) {
+    if ( $q->param('reason') ) {
         printf STDERR "\nerror: %s: %s (errorcode: %d)\n",
-            $url, $q->param ("reason"), $q->param ("errorcode");
+          $url, $q->param("reason"), $q->param("errorcode");
     }
     else {
         require Encode;
-        $title = Encode::decode_utf8 ($q->param ('title'));
+        $title = Encode::decode_utf8( $q->param('title') );
     }
 
-    unless ($title)
-        { print STDERR "\nwarning: $url: use id instead\n"  unless $config{quiet}; }
-    else
-        { print STDERR "."  unless $config{quiet}; }
+    unless ($title) {
+        print STDERR "\nwarning: $url: use id instead\n"
+          unless $config{quiet};
+    }
+    else { print STDERR "." unless $config{quiet}; }
 
     return $title;
 }
 
-sub uniq { return keys %{{ map { $_ => 1 } @_ }};  } # Original order lost.
+sub uniq {
+    return keys %{ { map { $_ => 1 } @_ } };
+}    # Original order lost.
 
 my $done = 0;
 
@@ -230,12 +227,13 @@ sub prompt {
         'd' => \&dump,
     );
 
-    print STDERR "Enter prompt. Type \"help\" to get a list of commands.\n";
+    print STDERR
+      "Enter prompt. Type \"help\" to get a list of commands.\n";
     list();
 
     my $p = "(grake) ";
 
-    while (not $done) {
+    while ( not $done ) {
 
         print STDERR $p;
 
@@ -244,12 +242,11 @@ sub prompt {
         next unless $ln;
         chomp $ln;
 
-        if ($ln =~ /(\d+)/)
-            { toggle_caption ($1); }
+        if ( $ln =~ /(\d+)/ ) { toggle_caption($1); }
 
         else {
             next unless $ln =~ /(\w)/;
-            $cmds{$1}()  if defined $cmds{$1};
+            $cmds{$1}() if defined $cmds{$1};
         }
 
     }
@@ -266,7 +263,7 @@ sub help {
   (number)  .. toggle caption
   dump      .. dump selected links and exit
   quit      .. quit without dumping links\n"
-  . qq/Command name abbreviations are allowed, e.g. "h" instead of "help"\n/;
+      . qq/Command name abbreviations are allowed, e.g. "h" instead of "help"\n/;
 }
 
 sub quit { exit 0; }
@@ -274,12 +271,11 @@ sub quit { exit 0; }
 sub list {
     my $i = 0;
     foreach (@links) {
-        printf STDERR "%2s%02d: %s\n",
-            $_->{selected}
-                ? ">"
-                : "",
-            ++$i,
-            $_->{title} || $_->{url};
+        printf STDERR "%2s%02d: %s\n", $_->{selected}
+          ? ">"
+          : "",
+          ++$i,
+          $_->{title} || $_->{url};
     }
 }
 
@@ -294,7 +290,7 @@ sub select_none {
 }
 
 sub invert_selection {
-    $_->{selected} = not $_->{selected}  foreach @links;
+    $_->{selected} = not $_->{selected} foreach @links;
     list();
 }
 
@@ -302,12 +298,11 @@ sub dump { $done = 1; }
 
 sub toggle_caption {
     my $i = (shift) - 1;
-    if ($i >= 0 && exists $links[$i]) {
+    if ( $i >= 0 && exists $links[$i] ) {
         $links[$i]->{selected} = not $links[$i]->{selected};
         list();
     }
-    else
-        { print STDERR "error: out of range\n"; }
+    else { print STDERR "error: out of range\n"; }
 }
 
 __END__
