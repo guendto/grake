@@ -4,6 +4,7 @@ ChangeLog.pre-gitlog
 COPYING
 NEWS
 Makefile.PL
+man1/grake.1.pod
 MANIFEST			This list of files
 README
 t/grake-Pod.t
