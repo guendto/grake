@@ -53,7 +53,7 @@ sub init {
 }
 
 sub print_version {
-    print "grake $VERSION\n";
+    print "grake version $VERSION\n";
     exit 0;
 }
 
