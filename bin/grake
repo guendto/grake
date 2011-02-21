@@ -126,7 +126,7 @@ sub main {
     }
     else { print STDERR "done.\n" unless $config{quiet}; }
 
-    print STDERR "Getting ..." unless $config{quiet};
+    print STDERR ":: Getting video title ..." unless $config{quiet};
 
     foreach my $id (@ids) {
 
