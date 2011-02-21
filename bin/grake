@@ -307,148 +307,24 @@ sub toggle_caption {
 
 __END__
 
-=head1 NAME
-
-grake - Youtube video link scanner
-
 =head1 SYNOPSIS
 
 grake [-q] [-i] [-t] [--csv | --json] [--proxy E<lt>addrE<gt> | --no-proxy]
     [<url>...]
 
-=head1 DESCRIPTION
-
-grake is a command line tool for scanning webpages for Youtube video links.
-Each found link is separated with a newline and dumped to the standard output.
-
-You can use grake together with such tools like C<cclive(1)>. If you
-need to select the videos, use the C<--interactive> switch.
-
 =head1 OPTIONS
 
-     --help                  print help and exit
-     --version               print version and exit
-     --license               print license and exit
- -q, --quiet                 be quiet
- -i, --interactive           run in interactive mode
- -t, --title                 get title for video link
-     --json                  print details in json, implies -t
-     --csv                   print details in csv, implies -t
-     --proxy arg (=http_env) use proxy for http connections
-     --no-proxy              disable use of http proxy
-
-=head1 OPTION DESCRIPTIONS
-
-=over 4
-
-=item B<--help>
-
-Print help and exit.
-
-=item B<--version>
-
-Print version and exit.
-
-=item B<--license>
-
-Print license and exit.
-
-=item B<-q, --quiet>
-
-Be quiet.
-
-=item B<-i, --interactive>
-
-Enable interactive prompt which can be used to select the found
-video links to be dumped to stdout. By default grake dumps all
-found links without prompting.
-
-=item B<-t, --title>
-
-Get a video title for each found link. The default is no.
-
-=item B<--json>
-
-Print details in JSON. Negates C<--csv>. Implies C<--title>.
-
-=item B<--csv>
-
-Print details in CSV ("$title","$url"\n). Implies C<--title>.
-
-=item B<--proxy> I<arg>
-
-Use I<arg> for HTTP proxy, e.g. "http://foo:1234". Overrides the http_proxy
-environment setting.
-
-=item B<--no-proxy>
-
-Disable use of HTTP proxy. Overrides both C<--proxy> and http_proxy environment
-settings.
-
-=back
-
-=head1 EXAMPLES
-
-=over 4
-
-=item B<grake "http://youtube.com">
-
-Typical use.
-
-=item B<grake --json "http://youtube.com">
-
-Same but print details in JSON.
-
-=item B<grake "http://youtube.com" | cclive>
-
-Download the found videos with C<cclive(1)>.
-
-=back
-
-=head1 EXIT STATUS
-
-Exits 0 on success, otherwise E<gt>0;
-
-=head1 FILES
-
-=over 4
-
-=item $HOME/.grakerc, for example:
-
-echo "--title" >> ~/.grakerc
-
-=back
-
-=head1 NOTES
-
-=over 4
-
-=item B<http_proxy>
-
-grake depends on LWP::UserAgent which reads the http_proxy environment
-setting.
-  env http_proxy=http://foo:1234 grake URL
-
-=item B<Project>
-
-<http://grake.googlecode.com/>
-
-=item B<Development repository>
-
-<git://repo.or.cz/grake.git>
-
-e.g. git clone git://repo.or.cz/grake.git
-
-=back
-
-=head1 SEE ALSO
-
-C<cclive(1)>
-
-=head1 AUTHOR
-
-Toni Gundogdu <legatvs gmail com>
+     --help                  Print help and exit
+     --version               Print version and exit
+     --license               Print license and exit
+ -q, --quiet                 Be quiet
+ -i, --interactive           Run in interactive mode
+ -t, --title                 Get title for video link
+     --json                  Print details in json, implies -t
+     --csv                   Print details in csv, implies -t
+     --proxy arg (=http_env) Use proxy for HTTP connections
+     --no-proxy              Disable use of HTTP proxy
 
 =cut
 
-
+# vim: set ts=4 sw=4 tw=72 expandtab:
