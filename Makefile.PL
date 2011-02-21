@@ -22,4 +22,14 @@ WriteMakefile(
 'Test::Pod'        => 1.44,  # <http://search.cpan.org/perldoc?Test::Pod>
     },
     'LICENSE' => 'gpl',
+    dist => {
+        PREOP =>
+'@if test -f .git/HEAD; then \
+	git log --stat --after="Thu Nov 30 12:14:37 2010" >ChangeLog; \
+fi',
+        POSTOP   =>
+'@if test -f .git/HEAD; then \
+	git checkout ChangeLog; \
+fi',
+    },
 );
