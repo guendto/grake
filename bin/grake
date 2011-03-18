@@ -101,9 +101,13 @@ sub main {
     $a->proxy( 'http', $config{proxy} ) if $config{proxy};
     $a->no_proxy('') if $config{no_proxy};
 
-    require URI::Escape;
+    # Match: /watch?v=, /v/, /embed/
+    # (At least) Hulu uses the same "/embed/" which is why we no longer
+    # use the "(?>[-_\w]{11})".
 
-    my $q = qr{v[=/]((?>[-_\w]{11}))};
+    my $q = qr{[?/](?:embed|v)[=/]((?>[-_\w]+))};
+
+    require URI::Escape;
 
     foreach (@ARGV) {
 
@@ -115,7 +119,7 @@ sub main {
         }
 
         my $d = URI::Escape::uri_unescape( $r->content );
-        @ids = uniq2( ( @ids, $d =~ /$q/g ) );
+        @ids = weed( uniq2( ( @ids, $d =~ /$q/g ) ) );
 
         print STDERR "." unless $config{quiet};
     }
@@ -225,6 +229,14 @@ sub trim {
     $s =~ s{\s+$}//;
     $s =~ s{\s\s+}/ /g;
     $s;
+}
+
+sub weed {
+    my @r = ();
+    foreach (@_) {
+        push @r, $_ if length $_ == 11;
+    }
+    @r;
 }
 
 sub uniq2 {    # http://is.gd/g8jQU
