@@ -115,7 +115,7 @@ sub main {
         }
 
         my $d = URI::Escape::uri_unescape( $r->content );
-        @ids = uniq( ( @ids, $d =~ /$q/g ) );
+        @ids = uniq2( ( @ids, $d =~ /$q/g ) );
 
         print STDERR "." unless $config{quiet};
     }
@@ -126,7 +126,9 @@ sub main {
     }
     else { print STDERR "done.\n" unless $config{quiet}; }
 
-    print STDERR ":: Getting video title ..." unless $config{quiet};
+    if ( $config{title} ) {
+        print STDERR ":: Getting video title ..." unless $config{quiet};
+    }
 
     foreach my $id (@ids) {
 
@@ -139,12 +141,14 @@ sub main {
             selected => 1
         );
 
-        $tmp{title} = get_title( $a, $tmp{gvi} ) if $config{title};
+        $tmp{title} = get_title( $a, \%tmp ) if $config{title};
 
         push @links, \%tmp;
     }
 
-    print STDERR "done.\n" unless $config{quiet};
+    if ( $config{title} ) {
+        print STDERR "done.\n" unless $config{quiet};
+    }
 
     prompt() if $config{interactive};
 
@@ -186,42 +190,54 @@ sub main {
 
 sub get_title {
 
-    my ( $a, $url ) = @_;
+    my ( $a, $video ) = @_;
 
-    my $r = $a->get($url);
+    my $r = $a->get( $$video{gvi} );
 
     unless ( $r->is_success ) {
-        printf STDERR "\nerror: $url: %s\n", $r->status_line;
+        printf STDERR "\nerror: $$video{url}: %s\n", $r->status_line;
         return;
     }
-
-    my $title;
 
     require CGI;
 
     my $q = CGI->new( $r->content );
 
+    my $title;
+
     if ( $q->param('reason') ) {
         printf STDERR "\nerror: %s: %s (errorcode: %d)\n",
-          $url, $q->param("reason"), $q->param("errorcode");
+          $$video{url}, trim( $q->param("reason") ),
+          $q->param("errorcode");
     }
     else {
         require Encode;
-        $title = Encode::decode_utf8( $q->param('title') );
+        $title = trim( Encode::decode_utf8( $q->param('title') ) );
+        print STDERR "." unless $config{quiet};
     }
 
-    unless ($title) {
-        print STDERR "\nwarning: $url: use id instead\n"
-          unless $config{quiet};
-    }
-    else { print STDERR "." unless $config{quiet}; }
-
-    return $title;
+    $title;
 }
 
-sub uniq {
-    return keys %{ { map { $_ => 1 } @_ } };
-}    # Original order lost.
+sub trim {
+    my $s = shift;
+    $s =~ s{^[\s]+}//;
+    $s =~ s{\s+$}//;
+    $s =~ s{\s\s+}/ /g;
+    $s;
+}
+
+sub uniq2 {    # http://is.gd/g8jQU
+    my %seen = ();
+    my @r    = ();
+    foreach my $a (@_) {
+        unless ( $seen{$a} ) {
+            push @r, $a;
+            $seen{$a} = 1;
+        }
+    }
+    @r;
+}
 
 my $done = 0;
 
