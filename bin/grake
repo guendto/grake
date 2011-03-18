@@ -340,16 +340,16 @@ grake [-q] [-i] [-t] [--csv | --json] [--proxy E<lt>addrE<gt> | --no-proxy]
 
 =head1 OPTIONS
 
-     --help                  Print help and exit
-     --version               Print version and exit
-     --license               Print license and exit
- -q, --quiet                 Be quiet
- -i, --interactive           Run in interactive mode
- -t, --title                 Get title for video link
-     --json                  Print details in json, implies -t
-     --csv                   Print details in csv, implies -t
-     --proxy arg (=http_env) Use proxy for HTTP connections
-     --no-proxy              Disable use of HTTP proxy
+     --help                     Print help and exit
+     --version                  Print version and exit
+     --license                  Print license and exit
+ -q, --quiet                    Be quiet
+ -i, --interactive              Run in interactive mode
+ -t, --title                    Get title for video link
+     --json                     Print details in json, implies -t
+     --csv                      Print details in csv, implies -t
+     --proxy arg (=http_proxy)  Use proxy for HTTP connections
+     --no-proxy                 Disable use of HTTP proxy
 
 =cut
 
