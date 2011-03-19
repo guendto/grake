@@ -1,4 +1,13 @@
 
+0.0.7  Sat Mar 19 2011  Toni Gundogdu
+Changes:
+        - Print video page URL instead of GVI URL with an error message
+        - Extend scan pattern to cover the new "/embed/"
+Bugfixes:
+        - Print "Getting video title" with -t only
+        - Retain scanned video ID order
+
+
 0.0.6  Thu Mar 03 2011  Toni Gundogdu
 Changes:
         - Minor tweaks to status messages
