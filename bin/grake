@@ -22,17 +22,24 @@ use warnings;
 use strict;
 use v5.10;
 
-use version 0.77 (); our $VERSION = version->declare("0.1.0");
-
 binmode STDOUT, ":utf8";
 binmode STDERR, ":utf8";
 
+use version 0.77 (); our $VERSION = version->declare("0.1.0");
+
 use Getopt::ArgvFile(home => 1, startupFilename => [qw(.grakerc)]);
 use Getopt::Long qw(:config bundling);
+use Carp qw(croak);
 
 my %config;
 
 exit main();
+
+sub help
+{
+  require Pod::Usage;
+  Pod::Usage::pod2usage(-exitstatus => 0, -verbose => 1);
+}
 
 sub init
 {
@@ -46,8 +53,10 @@ sub init
              'no_proxy|no-proxy',
              'quiet|q',
              'version' => \&version,
-             'help'    => \&print_help,
+             'help'    => \&help,
             ) or exit 1;
+
+  help if scalar @ARGV == 0;
 
   $config{title} ||= $config{json};
   $config{title} ||= $config{csv};
@@ -64,29 +73,20 @@ warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.";
   exit 0;
 }
 
-sub print_help
-{
-  require Pod::Usage;
-  Pod::Usage::pod2usage(-exitstatus => 0, -verbose => 1);
-}
-
 my @ids;
 my @links;
+
+sub spew_qe {print STDERR @_ unless $config{quiet}}
 
 sub main
 {
   init();
 
-  print_help() unless scalar @ARGV;
-
-  print STDERR "Checking ..." unless $config{quiet};
+  spew_qe "Checking ...";
 
   require LWP;
-
   my $a = new LWP::UserAgent;
-
   $a->env_proxy;    # http://search.cpan.org/perldoc?LWP::UserAgent
-
   $a->proxy('http', $config{proxy}) if $config{proxy};
   $a->no_proxy('') if $config{no_proxy};
 
@@ -95,6 +95,7 @@ sub main
   # use the "(?>[-_\w]{11})".
 
   my $q = qr{[?/](?:embed|v)[=/]((?>[-_\w]+))};
+  my $n = 0;
 
   require URI::Escape;
 
@@ -111,21 +112,18 @@ sub main
     my $d = URI::Escape::uri_unescape($r->content);
     @ids = weed(uniq2((@ids, $d =~ /$q/g)));
 
-    print STDERR "." unless $config{quiet};
+    spew_qe((++$n % 5 == 0) ? " " : ".");
   }
 
-  unless (scalar @ids)
+  if (scalar @ids == 0)
   {
-    print STDERR "error: nothing found.\n";
-    return 0;
+    croak "error: nothing found\n";
   }
-  else {print STDERR "done.\n" unless $config{quiet};}
+  else {spew_qe "done.\n"}
 
-  if ($config{title})
-  {
-    print STDERR ":: Getting video title ..." unless $config{quiet};
-  }
+  spew_qe "Get video title ..." if $config{title};
 
+  $n = 0;
   foreach my $id (@ids)
   {
     my %tmp = (
@@ -137,19 +135,16 @@ sub main
             selected => 1
     );
 
-    $tmp{title} = get_title($a, \%tmp) if $config{title};
-
+    $tmp{title} = get_title($a, \%tmp, $n) if $config{title};
     push @links, \%tmp;
+    ++$n;
   }
 
-  if ($config{title})
-  {
-    print STDERR "done.\n" unless $config{quiet};
-  }
+  spew_qe "done.\n" if $config{title};
 
   prompt() if $config{interactive};
 
-  if ($config{json}) {print qq/{\n  "video": [\n/;}
+  say qq/{\n  "video": [/ if $config{json};
 
   my $i = 0;
 
@@ -164,28 +159,26 @@ sub main
 
       if ($config{json})
       {
-        print ",\n" if $i > 1;
-
-        print "    {\n"
-          . qq/      "title": "$t",\n/
-          . qq/      "url": "$_->{url}"\n/ . "    }",
-          ;
+        say "," if $i > 1;
+        say "    {";
+        say qq/      "title": "$t",/;
+        say qq/      "url": "$_->{url}"/;
+        print "    }";
       }
 
-      elsif ($config{csv}) {print qq/"$t","$_->{url}"\n/;}
+      elsif ($config{csv}) {say qq/"$t","$_->{url}"/;}
 
-      else {print "$_->{url}\n";}
+      else {say "$_->{url}";}
     }
   }
 
-  if ($config{json}) {print "\n  ]\n}\n";}
-
-  return 0;
+  if ($config{json}) {say "\n  ]\n}";}
+  0;
 }
 
 sub get_title
 {
-  my ($a, $video) = @_;
+  my ($a, $video, $n) = @_;
 
   my $r = $a->get($$video{gvi});
 
@@ -210,9 +203,8 @@ sub get_title
   {
     require Encode;
     $title = trim(Encode::decode_utf8($q->param('title')));
-    print STDERR "." unless $config{quiet};
+    spew_qe(($n % 5 == 0) ? " " : ".");
   }
-
   $title;
 }
 
@@ -255,18 +247,17 @@ my $done = 0;
 sub prompt
 {
   my %cmds = (
-              'h' => \&help,
-              'q' => \&quit,
-              'l' => \&list,
-              'a' => \&select_all,
-              'n' => \&select_none,
-              'i' => \&invert_selection,
-              'd' => \&dump,
+              'h' => \&p_help,
+              'q' => sub {exit 0},
+              'd' => sub {$done=1},
+              'l' => \&p_show,
+              'a' => \&p_select_all,
+              'n' => \&p_select_none,
+              'i' => \&p_invert_selection,
              );
 
-  print STDERR
-    "Enter prompt. Type \"help\" to get a list of commands.\n";
-  list();
+  say STDERR qq/Enter prompt. Type "help" to get a list of commands./;
+  p_show();
 
   my $p = "(grake) ";
 
@@ -279,7 +270,7 @@ sub prompt
     next unless $ln;
     chomp $ln;
 
-    if ($ln =~ /(\d+)/) {toggle_caption($1);}
+    if ($ln =~ /(\d+)/) {p_toggle($1);}
 
     else
     {
@@ -290,9 +281,9 @@ sub prompt
   }
 }
 
-sub help
+sub p_help
 {
-  print STDERR "Commands:
+  say STDERR qq/Commands:
   help      .. this
   list      .. display found links (> indicates selected for download)
   all       .. select all
@@ -300,13 +291,11 @@ sub help
   invert    .. invert selection
   (number)  .. toggle caption
   dump      .. dump selected links and exit
-  quit      .. quit without dumping links\n"
-    . qq/Command name abbreviations are allowed, e.g. "h" instead of "help"\n/;
+  quit      .. quit without dumping links
+Command name abbreviations are allowed, e.g. "h" instead of "help"/;
 }
 
-sub quit {exit 0;}
-
-sub list
+sub p_show
 {
   my $i = 0;
   foreach (@links)
@@ -319,35 +308,33 @@ sub list
   }
 }
 
-sub select_all
+sub p_select_all
 {
   $_->{selected} = 1 foreach @links;
-  list();
+  p_show();
 }
 
-sub select_none
+sub p_select_none
 {
   $_->{selected} = 0 foreach @links;
-  list();
+  p_show();
 }
 
-sub invert_selection
+sub p_invert_selection
 {
   $_->{selected} = not $_->{selected} foreach @links;
-  list();
+  p_show();
 }
 
-sub dump {$done = 1;}
-
-sub toggle_caption
+sub p_toggle
 {
   my $i = (shift) - 1;
   if ($i >= 0 && exists $links[$i])
   {
     $links[$i]->{selected} = not $links[$i]->{selected};
-    list();
+    p_show();
   }
-  else {print STDERR "error: out of range\n";}
+  else {say STDERR "error: out of range";}
 }
 
 __END__
@@ -355,9 +342,9 @@ __END__
 =head1 SYNOPSIS
 
 grake [-q] [-i] [-t] [--csv | --json] [--proxy E<lt>addrE<gt> | --no-proxy]
-    [<url>...]
+      [<url>...]
 
-=head1 OPTIONS
+=head2 OPTIONS
 
      --help                     Print help and exit
      --version                  Print version and exit
@@ -371,4 +358,4 @@ grake [-q] [-i] [-t] [--csv | --json] [--proxy E<lt>addrE<gt> | --no-proxy]
 
 =cut
 
-# vim: set ts=4 sw=4 tw=72 expandtab:
+# vim: set ts=2 sw=2 tw=72 expandtab:
