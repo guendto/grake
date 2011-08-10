@@ -31,8 +31,6 @@ use Getopt::ArgvFile(home => 1, startupFilename => [qw(.grakerc)]);
 use Getopt::Long qw(:config bundling);
 use Carp qw(croak);
 
-my %config;
-
 exit main();
 
 sub help
@@ -40,6 +38,8 @@ sub help
   require Pod::Usage;
   Pod::Usage::pod2usage(-exitstatus => 0, -verbose => 1);
 }
+
+my %config;
 
 sub init
 {
@@ -73,10 +73,10 @@ warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.";
   exit 0;
 }
 
-my @ids;
-my @links;
-
 sub spew_qe {print STDERR @_ unless $config{quiet}}
+
+my @ids;
+my @urls;
 
 sub main
 {
@@ -136,7 +136,7 @@ sub main
     );
 
     $tmp{title} = get_title($a, \%tmp, $n) if $config{title};
-    push @links, \%tmp;
+    push @urls, \%tmp;
     ++$n;
   }
 
@@ -148,7 +148,7 @@ sub main
 
   my $i = 0;
 
-  foreach (@links)
+  foreach (@urls)
   {
     if ($_->{selected} or not $config{interactive})
     {
@@ -285,20 +285,20 @@ sub p_help
 {
   say STDERR qq/Commands:
   help      .. this
-  list      .. display found links (> indicates selected for download)
+  list      .. display found urls (> indicates selected for download)
   all       .. select all
   none      .. select none
   invert    .. invert selection
   (number)  .. toggle caption
-  dump      .. dump selected links and exit
-  quit      .. quit without dumping links
+  dump      .. dump selected urls and exit
+  quit      .. quit without dumping urls
 Command name abbreviations are allowed, e.g. "h" instead of "help"/;
 }
 
 sub p_show
 {
   my $i = 0;
-  foreach (@links)
+  foreach (@urls)
   {
     printf STDERR "%2s%02d: %s\n", $_->{selected}
       ? ">"
@@ -310,28 +310,28 @@ sub p_show
 
 sub p_select_all
 {
-  $_->{selected} = 1 foreach @links;
+  $_->{selected} = 1 foreach @urls;
   p_show();
 }
 
 sub p_select_none
 {
-  $_->{selected} = 0 foreach @links;
+  $_->{selected} = 0 foreach @urls;
   p_show();
 }
 
 sub p_invert_selection
 {
-  $_->{selected} = not $_->{selected} foreach @links;
+  $_->{selected} = not $_->{selected} foreach @urls;
   p_show();
 }
 
 sub p_toggle
 {
   my $i = (shift) - 1;
-  if ($i >= 0 && exists $links[$i])
+  if ($i >= 0 && exists $urls[$i])
   {
-    $links[$i]->{selected} = not $links[$i]->{selected};
+    $urls[$i]->{selected} = not $urls[$i]->{selected};
     p_show();
   }
   else {say STDERR "error: out of range";}
