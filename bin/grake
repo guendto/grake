@@ -45,8 +45,7 @@ sub init
              'proxy=s',
              'no_proxy|no-proxy',
              'quiet|q',
-             'version' => \&print_version,
-             'license' => \&print_license,
+             'version' => \&version,
              'help'    => \&print_help,
             ) or exit 1;
 
@@ -54,29 +53,14 @@ sub init
   $config{title} ||= $config{csv};
 }
 
-sub print_version
+sub version
 {
-  print "grake version $VERSION\n";
-  exit 0;
-}
-
-sub print_license
-{
-  print "# Copyright (C) 2010-2011  Toni Gundogdu.
-#
-# This program is free software: you can redistribute it and/or modify
-# it under the terms of the GNU General Public License as published by
-# the Free Software Foundation, either version 3 of the License, or
-# (at your option) any later version.
-#
-# This program is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-# GNU General Public License for more details.
-#
-# You should have received a copy of the GNU General Public License
-# along with this program.  If not, see <http://www.gnu.org/licenses/>.
-";
+  eval "require Umph::Prompt";
+  my $p = $@ ? "" : ", Umph::Prompt version $Umph::Prompt::VERSION";
+  say "grake version $VERSION$p
+Copyright (C) 2010-2011  Toni Gundogdu
+This is free software; see the source for copying conditions.  There is NO
+warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.";
   exit 0;
 }
 
@@ -377,7 +361,6 @@ grake [-q] [-i] [-t] [--csv | --json] [--proxy E<lt>addrE<gt> | --no-proxy]
 
      --help                     Print help and exit
      --version                  Print version and exit
-     --license                  Print license and exit
  -q, --quiet                    Be quiet
  -i, --interactive              Run in interactive mode
  -t, --title                    Get title for video link
