@@ -20,6 +20,7 @@
 
 use warnings;
 use strict;
+use v5.10;
 
 use version 0.77 (); our $VERSION = version->declare("0.1.0");
 
