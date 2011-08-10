@@ -23,6 +23,8 @@ WriteMakefile(
 'version'          => 0.77,  # <http://search.cpan.org/perldoc?version>
     },
     'LICENSE' => 'gpl',
+    'MAN1PODS' =>
+        { 'doc/man1/grake.1.pod' => '$(INST_MAN1DIR)/grake.$(MAN1EXT)' },
     dist => {
         PREOP =>
 '@if test -f .git/HEAD; then \
