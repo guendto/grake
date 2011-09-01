@@ -119,4 +119,4 @@ C<cclive(1)>
 
 =head1 AUTHOR
 
-Toni Gundogdu E<lt>legatvs gmail comE<gt>
+Toni Gundogdu E<lt>legatvs at sign cpan orgE<gt>
