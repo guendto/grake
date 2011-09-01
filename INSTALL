@@ -1,0 +1,60 @@
+
+
+PREREQUISITES
+=============
+
+Required
+--------
+
+  * Perl 5.10.1+      <http://perl.org/>
+  * Getopt::ArgvFile  <http://search.cpan.org/perldoc?Getopt::ArgvFile>
+  * LWP::UserAgent    <http://search.cpan.org/perldoc?LWP::UserAgent>
+
+Recommended
+-----------
+
+  * Umph::Prompt      <http://umph.googlecode.com/>
+    for --interactive
+
+Additionally, to install:
+-------------------------
+
+  * ExtUtils::MakeMaker <http://search.cpan.org/perldoc?ExtUtils::MakeMaker>
+
+
+INSTALLATION
+============
+
+Notes
+-----
+
+Uninstall earlier versions of grake if you have any installed.
+
+Typical installation
+--------------------
+
+To install:
+
+  perl Makefile.PL
+  make
+  make install
+
+  * Note that you can specify install prefix with INSTALL_BASE
+    e.g. perl Makefile.PL INSTALL_BASE=/usr/local
+
+Recommended reading if you are new to ExtUtils::MakeMaker:
+  * <http://search.cpan.org/perldoc?ExtUtils::MakeMaker>
+  * <http://perldoc.perl.org/ExtUtils/MakeMaker/FAQ.html>
+
+For the lazy
+------------
+
+If you do not want to install grake (and Umph::Prompt),
+here is one way to work around that:
+
+  export PERL5LIB=/path/to/untarred/Umph-Prompt/lib/
+  export PATH=$PATH:/path/to/untarred/grake/bin/
+  (run grake)
+
+
+vim: set ts=2 sw=2 tw=72 expandtab:

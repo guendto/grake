@@ -7,4 +7,5 @@ Makefile.PL
 doc/man1/grake.1.pod
 MANIFEST			This list of files
 README
+INSTALL
 t/grake-Pod.t

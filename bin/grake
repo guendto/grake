@@ -317,7 +317,7 @@ sub open_prompt
 
     # Other (required) settings
     total_items     => scalar @items,
-    prompt_msg      => 'umph',
+    prompt_msg      => 'grake',
     max_shown_items => 20
   );
 
