@@ -3,7 +3,7 @@
 ^blib/
 ^\.
 .gz
-TODO
+todo/
 ~$
 ^patches/
 .patch
