@@ -1,4 +1,14 @@
 
+0.1.0  Thu Sep 01 2011  Toni Gundogdu
+Changes:
+    - Remove --title
+        - Obsoleted by the change of making --interactive imply --title
+    - use Perl 5.10.1+
+    - use Umph::Prompt with --interactive
+        - Makes several improvements to the (old) prompt
+        - Get it from <http://umph.googlecode.com/> for now
+
+
 0.0.7  Sat Mar 19 2011  Toni Gundogdu
 Changes:
         - Print video page URL instead of GVI URL with an error message
