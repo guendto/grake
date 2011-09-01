@@ -58,6 +58,7 @@ sub init
 
   help if scalar @ARGV == 0;
 
+  $config{title} ||= $config{interactive};
   $config{title} ||= $config{json};
   $config{title} ||= $config{csv};
 }
