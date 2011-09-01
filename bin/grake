@@ -56,7 +56,6 @@ sub init
   GetOptions(
              \%config,
              'interactive|i',
-             'title|t',
              'json',
              'csv',
              'proxy=s',
@@ -68,8 +67,8 @@ sub init
 
   print_help if scalar @ARGV == 0;
 
-  # -i, -j, -c imply -t
-  $config{title} ||= $config{interactive};
+  $config{title} = 0;    # NOTE: Inaccesible from cmdline
+  $config{title} ||= $config{interactive};  # These imply title fetching
   $config{title} ||= $config{json};
   $config{title} ||= $config{csv};
 
@@ -141,12 +140,12 @@ sub main
   foreach (@ids)
   {
     my %tmp = (
-            id  => $_,
-            url => "http://youtube.com/watch?v=$_",
-            gvi => "http://www.youtube.com/get_video_info?&video_id=$_"
-              . "&el=detailpage&ps=default&eurl=&gl=US&hl=en",
-            title    => '',
-            selected => 1
+             id  => $_,
+             url => "http://youtube.com/watch?v=$_",
+             gvi => "http://www.youtube.com/get_video_info?&video_id=$_"
+               . "&el=detailpage&ps=default&eurl=&gl=US&hl=en",
+             title    => '',
+             selected => 1
     );
 
     $tmp{title} = get_title($a, \%tmp, $n) if $config{title};
@@ -329,7 +328,7 @@ __END__
 
 =head1 SYNOPSIS
 
-grake [-q] [-i] [-t] [--csv | --json] [--proxy E<lt>addrE<gt> | --no-proxy]
+grake [-q] [-i] [--csv | --json] [--proxy E<lt>addrE<gt> | --no-proxy]
       [<url>...]
 
 =head2 OPTIONS
@@ -337,10 +336,9 @@ grake [-q] [-i] [-t] [--csv | --json] [--proxy E<lt>addrE<gt> | --no-proxy]
      --help                     Print help and exit
      --version                  Print version and exit
  -q, --quiet                    Be quiet
- -i, --interactive              Run in interactive mode, implies -t
- -t, --title                    Get title for video link
-     --json                     Print details in json, implies -t
-     --csv                      Print details in csv, implies -t
+ -i, --interactive              Run in interactive mode
+     --json                     Print details in json
+     --csv                      Print details in csv
      --proxy arg (=http_proxy)  Use proxy for HTTP connections
      --no-proxy                 Disable use of HTTP proxy
 
