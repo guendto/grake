@@ -5,13 +5,16 @@ grake - Youtube video link scanner
 
 =head1 SYNOPSIS
 
-grake [-q] [-i] [-t] [--csv | --json] [--proxy E<lt>addrE<gt> | --no-proxy]
+grake [-q] [-i] [--csv | --json] [--proxy E<lt>addrE<gt> | --no-proxy]
     [<url>...]
 
 =head1 DESCRIPTION
 
 grake is a command line tool for scanning webpages for Youtube video links.
-Each found link is separated with a newline and dumped to the standard output.
+
+grake prints the found URLs to the standard output, each URL separated
+with a newline. It can be used to select the items by using the
+C<--interactive> prompt.
 
 =head1 OPTIONS
 
@@ -31,21 +34,16 @@ Be quiet.
 
 =item B<-i, --interactive>
 
-Enable interactive prompt which can be used to select the found
-video links to be dumped to stdout. By default grake dumps all
-found links without prompting.
-
-=item B<-t, --title>
-
-Get a video title for each found link. The default is no.
+Open the interactive prompt which can be used to select the items.
+grake selects I<all> items by default. See also L</INTERACTIVE PROMPT>.
 
 =item B<--json>
 
-Print details in JSON. Negates C<--csv>. Implies C<--title>.
+Print details in JSON. Negates C<--csv>.
 
 =item B<--csv>
 
-Print details in CSV ("$title","$url"\n). Implies C<--title>.
+Print details in CSV.
 
 =item B<--proxy> I<arg>
 
@@ -54,10 +52,16 @@ environment setting.
 
 =item B<--no-proxy>
 
-Disable use of HTTP proxy. Overrides both C<--proxy> and http_proxy environment
-settings.
+Disable use of HTTP proxy. Overrides both C<--proxy> and http_proxy
+environment settings.
 
 =back
+
+=head1 INTERACTIVE PROMPT
+
+Use the C<--interactive> switch to open the prompt. Note that grake
+uses (as of 0.1.0) the Umph::Prompt module for this. Once the prompt
+opens, type "help" to get a list of commands available to the prompt.
 
 =head1 EXAMPLES
 
