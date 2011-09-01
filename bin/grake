@@ -1,5 +1,4 @@
 #!/usr/bin/perl
-# -*- coding: ascii -*-
 #
 # grake
 # Copyright (C) 2010-2011  Toni Gundogdu <legatvs@gmail.com>
@@ -18,9 +17,10 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 
+use feature 'say';
+
 use warnings;
 use strict;
-use v5.10;
 
 binmode STDOUT, ":utf8";
 binmode STDERR, ":utf8";
@@ -33,13 +33,23 @@ use Carp qw(croak);
 
 exit main();
 
-sub help
+sub print_help
 {
   require Pod::Usage;
   Pod::Usage::pod2usage(-exitstatus => 0, -verbose => 1);
 }
 
 my %config;
+
+sub check_umph_prompt
+{
+  if ($config{'interactive'} and not eval 'require Umph::Prompt')
+  {
+    say STDERR
+      qq/WARNING Umph::Prompt not found, ignoring --interactive option/;
+    $config{interactive} = 0;
+  }
+}
 
 sub init
 {
@@ -52,18 +62,21 @@ sub init
              'proxy=s',
              'no_proxy|no-proxy',
              'quiet|q',
-             'version' => \&version,
-             'help'    => \&help,
+             'version' => \&print_version,
+             'help'    => \&print_help,
             ) or exit 1;
 
-  help if scalar @ARGV == 0;
+  print_help if scalar @ARGV == 0;
 
+  # -i, -j, -c imply -t
   $config{title} ||= $config{interactive};
   $config{title} ||= $config{json};
   $config{title} ||= $config{csv};
+
+  check_umph_prompt;
 }
 
-sub version
+sub print_version
 {
   eval "require Umph::Prompt";
   my $p = $@ ? "" : ", Umph::Prompt version $Umph::Prompt::VERSION";
@@ -76,13 +89,11 @@ warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.";
 
 sub spew_qe {print STDERR @_ unless $config{quiet}}
 
-my @ids;
-my @urls;
+my @items;
 
 sub main
 {
-  init();
-
+  init;
   spew_qe "Checking ...";
 
   require LWP;
@@ -99,6 +110,8 @@ sub main
   my $n = 0;
 
   require URI::Escape;
+
+  my @ids;
 
   foreach (@ARGV)
   {
@@ -125,31 +138,31 @@ sub main
   spew_qe "Get video title ..." if $config{title};
 
   $n = 0;
-  foreach my $id (@ids)
+  foreach (@ids)
   {
     my %tmp = (
-            id  => $id,
-            url => "http://youtube.com/watch?v=$id",
-            gvi => "http://www.youtube.com/get_video_info?&video_id=$id"
+            id  => $_,
+            url => "http://youtube.com/watch?v=$_",
+            gvi => "http://www.youtube.com/get_video_info?&video_id=$_"
               . "&el=detailpage&ps=default&eurl=&gl=US&hl=en",
-            title    => undef,
+            title    => '',
             selected => 1
     );
 
     $tmp{title} = get_title($a, \%tmp, $n) if $config{title};
-    push @urls, \%tmp;
+    push @items, \%tmp;
     ++$n;
   }
 
   spew_qe "done.\n" if $config{title};
 
-  prompt() if $config{interactive};
+  open_prompt() if $config{interactive};
 
   say qq/{\n  "video": [/ if $config{json};
 
   my $i = 0;
 
-  foreach (@urls)
+  foreach (@items)
   {
     if ($_->{selected} or not $config{interactive})
     {
@@ -243,99 +256,73 @@ sub uniq2
   @r;
 }
 
-my $done = 0;
-
-sub prompt
+sub open_prompt
 {
-  my %cmds = (
-              'h' => \&p_help,
-              'q' => sub {exit 0},
-              'd' => sub {$done=1},
-              'l' => \&p_show,
-              'a' => \&p_select_all,
-              'n' => \&p_select_none,
-              'i' => \&p_invert_selection,
-             );
+  my $p = new Umph::Prompt(
+
+    # Commands.
+    commands => {
+      q => sub {
+        my ($p, $args) = @_;
+        $p->exit(\@items, $args);
+      },
+      d => sub {
+        my ($p, $args) = @_;
+        $p->display(\@items, $args);
+      },
+      m => sub {
+        my ($p, $args) = @_;
+        $p->max_shown_items(@{$args});
+      },
+      s => sub {
+        my ($p, $args) = @_;
+        $p->select(\@items, $args);
+      },
+      h => sub {
+        my ($p, $args) = @_;
+        my @a;
+        push @a,
+          {cmd => 'normal', desc => 'print results in default format'};
+        push @a, {cmd => 'json', desc => 'print results in json'};
+        push @a, {cmd => 'csv',  desc => 'print results in csv'};
+        $p->help(\@a);
+      },
+      n => sub {
+        $config{json} = 0;
+        $config{csv}  = 0;
+        say STDERR "=> print in default format";
+      },
+      j => sub {
+        $config{json} = 1;
+        $config{csv}  = 0;
+        say STDERR "=> print in json";
+      },
+      c => sub {
+        $config{json} = 0;
+        $config{csv}  = 1;
+        say STDERR "=> print in csv";
+      },
+    },
+
+    # Callbacks. All of these are optional.
+    ontoggle => sub {
+      my ($p, $args) = @_;
+      $p->toggle(\@items, $args);
+    },
+    onitems  => sub {return \@items},
+    onloaded => sub {
+      my ($p, $args) = @_;
+      $p->display(\@items, $args);
+    },
+
+    # Other (required) settings
+    total_items     => scalar @items,
+    prompt_msg      => 'umph',
+    max_shown_items => 20
+  );
 
   say STDERR qq/Enter prompt. Type "help" to get a list of commands./;
-  p_show();
-
-  my $p = "(grake) ";
-
-  while (not $done)
-  {
-    print STDERR $p;
-
-    my $ln = <STDIN>;
-
-    next unless $ln;
-    chomp $ln;
-
-    if ($ln =~ /(\d+)/) {p_toggle($1);}
-
-    else
-    {
-      next unless $ln =~ /(\w)/;
-      $cmds{$1}() if defined $cmds{$1};
-    }
-
-  }
-}
-
-sub p_help
-{
-  say STDERR qq/Commands:
-  help      .. this
-  list      .. display found urls (> indicates selected for download)
-  all       .. select all
-  none      .. select none
-  invert    .. invert selection
-  (number)  .. toggle caption
-  dump      .. dump selected urls and exit
-  quit      .. quit without dumping urls
-Command name abbreviations are allowed, e.g. "h" instead of "help"/;
-}
-
-sub p_show
-{
-  my $i = 0;
-  foreach (@urls)
-  {
-    printf STDERR "%2s%02d: %s\n", $_->{selected}
-      ? ">"
-      : "",
-      ++$i,
-      $_->{title} || $_->{url};
-  }
-}
-
-sub p_select_all
-{
-  $_->{selected} = 1 foreach @urls;
-  p_show();
-}
-
-sub p_select_none
-{
-  $_->{selected} = 0 foreach @urls;
-  p_show();
-}
-
-sub p_invert_selection
-{
-  $_->{selected} = not $_->{selected} foreach @urls;
-  p_show();
-}
-
-sub p_toggle
-{
-  my $i = (shift) - 1;
-  if ($i >= 0 && exists $urls[$i])
-  {
-    $urls[$i]->{selected} = not $urls[$i]->{selected};
-    p_show();
-  }
-  else {say STDERR "error: out of range";}
+  $p->exec;
 }
 
 __END__
@@ -350,7 +337,7 @@ grake [-q] [-i] [-t] [--csv | --json] [--proxy E<lt>addrE<gt> | --no-proxy]
      --help                     Print help and exit
      --version                  Print version and exit
  -q, --quiet                    Be quiet
- -i, --interactive              Run in interactive mode
+ -i, --interactive              Run in interactive mode, implies -t
  -t, --title                    Get title for video link
      --json                     Print details in json, implies -t
      --csv                      Print details in csv, implies -t
