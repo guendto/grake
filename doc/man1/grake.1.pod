@@ -5,8 +5,8 @@ grake - Youtube video link scanner
 
 =head1 SYNOPSIS
 
-grake [-q] [-i] [--csv | --json] [--proxy E<lt>addrE<gt> | --no-proxy]
-    [<url>...]
+grake [-q] [-i] [--csv | --json] [--proxy=E<lt>addrE<gt> | --no-proxy]
+      [--help] E<lt>urlE<gt> ...
 
 =head1 DESCRIPTION
 
